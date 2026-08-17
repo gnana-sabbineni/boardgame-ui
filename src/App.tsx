@@ -6,6 +6,8 @@ import { Onboarding } from "./pages/Onboarding";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Home } from "./pages/Home";
+import {Settings } from "./pages/Settings";
+import { ResetPassword } from "./pages/ResetPassword";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { token } = useAuth();
@@ -20,14 +22,9 @@ export default function App() {
           <Route path="/" element={<Onboarding />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route
-            path="/home"
-            element={
-    <RequireAuth>
-      <Home />
-    </RequireAuth>
-  }
-          />
+          <Route path="/home"element={<RequireAuth> <Home /> </RequireAuth>}/>
+          <Route path="/settings" element={ <RequireAuth> <Settings /></RequireAuth>}/>
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

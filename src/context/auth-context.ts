@@ -5,6 +5,7 @@ export interface AuthContextValue {
   user: User | null;
   token: string | null;
   setSession: (token: string, user: User) => void;
+  updateUser: (user: User) => void; 
   clearSession: () => void;
 }
 

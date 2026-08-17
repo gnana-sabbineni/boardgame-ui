@@ -22,5 +22,10 @@ export interface RegisterPayload {
   password: string;
 }
 
-// Register only returns the new user's id (a Guid, as a JSON string) — not a token/user.
-export type RegisterResponse = string;
+export interface UpdateProfilePayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  currentPassword?: string;
+  newPassword?: string;
+}

@@ -1,9 +1,7 @@
 import { useState, useCallback, type ReactNode } from "react";
 import type { User } from "../types/auth";
 import { AuthContext } from "./auth-context";
-
-const TOKEN_KEY = "boardwalk_token";
-const USER_KEY = "boardwalk_user";
+import { TOKEN_KEY, USER_KEY } from "../lib/storage-keys";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
@@ -19,6 +17,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
   }, []);
 
+  const updateUser = useCallback((newUser: User) => {
+  localStorage.setItem(USER_KEY, JSON.stringify(newUser));
+  setUser(newUser);
+}, []);
+
   const clearSession = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
@@ -26,9 +29,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  return (
-    <AuthContext.Provider value={{ user, token, setSession, clearSession }}>
-      {children}
-    </AuthContext.Provider>
-  );
+return (
+  <AuthContext.Provider value={{ user, token, setSession, updateUser, clearSession }}>
+    {children}
+  </AuthContext.Provider>
+);
 }

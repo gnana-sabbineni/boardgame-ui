@@ -1,3 +1,5 @@
+import { TOKEN_KEY } from "../lib/storage-keys";
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export class ApiError extends Error {
@@ -6,6 +8,13 @@ export class ApiError extends Error {
     super(message);
     this.status = status;
   }
+}
+
+interface ApiEnvelope<T> {
+  isSuccess: boolean;
+  message: string;
+  data: T | null;
+  statusCode: number;
 }
 
 function extractErrorMessage(body: unknown): string | undefined {
@@ -26,22 +35,30 @@ function extractErrorMessage(body: unknown): string | undefined {
   return undefined;
 }
 
-export async function apiFetch<TResponse>(
+export async function apiFetch<TData>(
   path: string,
   options: RequestInit = {}
-): Promise<TResponse> {
+): Promise<TData> {
+  const token = localStorage.getItem(TOKEN_KEY);
+
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
 
+  const body = await res.json().catch(() => null);
+
   if (!res.ok) {
-    const body = await res.json().catch(() => null);
     throw new ApiError(extractErrorMessage(body) ?? "Something went wrong", res.status);
   }
 
-  return res.json() as Promise<TResponse>;
+  if (body && typeof body === "object" && "isSuccess" in body) {
+    return (body as ApiEnvelope<TData>).data as TData;
+  }
+
+  return body as TData;
 }

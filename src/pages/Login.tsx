@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { TextField } from "../components/TextField";
+import { ForgotPasswordModal } from "../components/ForgotPasswordModal";
 import { login } from "../api/auth";
 import { ApiError } from "../api/client";
 import { useAuth } from "../context/auth-context";
@@ -14,6 +15,7 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isForgotOpen, setIsForgotOpen] = useState(false); // new
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -39,30 +41,23 @@ export function Login() {
         </div>
         <h1 className="mb-6 text-center text-2xl font-bold text-text">Log in</h1>
 
-        <div className="mb-6 flex flex-col gap-4">
-          <TextField
-            id="email"
-            label="Email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <TextField
-            id="password"
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+        <div className="mb-2 flex flex-col gap-4">
+          <TextField id="email" label="Email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <div>
+            <TextField id="password" label="Password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <button
+              type="button"
+              onClick={() => setIsForgotOpen(true)}
+              className="mt-1.5 text-xs text-text/50 hover:text-accent"
+            >
+              Forgot password?
+            </button>
+          </div>
         </div>
 
-        {error && <p className="mb-4 text-center text-sm text-danger">{error}</p>}
+        {error && <p className="mb-4 mt-4 text-center text-sm text-danger">{error}</p>}
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" className="mt-4 w-full" disabled={isSubmitting}>
           {isSubmitting ? "Logging in…" : "Log in"}
         </Button>
 
@@ -73,6 +68,8 @@ export function Login() {
           </Link>
         </p>
       </form>
+
+      {isForgotOpen && <ForgotPasswordModal onClose={() => setIsForgotOpen(false)} />}
     </div>
   );
 }
