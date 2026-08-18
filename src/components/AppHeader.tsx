@@ -8,10 +8,10 @@ import { useNotifications } from "../hooks/useNotifications";
 import type { NotificationAction } from "../types/notification";
 
 interface AppHeaderProps {
-  onFriendRequestAccepted?: () => void;
+  onAccepted?: () => void;
 }
 
-export function AppHeader({ onFriendRequestAccepted }: AppHeaderProps) {
+export function AppHeader({ onAccepted }: AppHeaderProps) {
   const { user } = useAuth();
   const { notifications, unreadCount, isLoading, error, respond } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
@@ -30,10 +30,12 @@ export function AppHeader({ onFriendRequestAccepted }: AppHeaderProps) {
 
   async function handleRespond(id: string, action: NotificationAction) {
     await respond(id, action);
-    // Only "accept" can change the friends list — lobby invites aren't
-    // implemented yet, so any successful accept today is a friend request.
+    // NotificationResponse doesn't currently indicate whether this was a
+    // friend request or a lobby invite (no Type field on the wire), so an
+    // accept triggers a generic "something changed" refresh rather than a
+    // targeted one. See note to the backend team about adding that field.
     if (action === "accept") {
-      onFriendRequestAccepted?.();
+      onAccepted?.();
     }
   }
 

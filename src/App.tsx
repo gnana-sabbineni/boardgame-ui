@@ -8,6 +8,7 @@ import { Register } from "./pages/Register";
 import { Home } from "./pages/Home";
 import {Settings } from "./pages/Settings";
 import { ResetPassword } from "./pages/ResetPassword";
+import { Lobby } from "./pages/Lobby";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { token } = useAuth();
@@ -25,6 +26,8 @@ export default function App() {
           <Route path="/home"element={<RequireAuth> <Home /> </RequireAuth>}/>
           <Route path="/settings" element={ <RequireAuth> <Settings /></RequireAuth>}/>
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/lobby"  element={ <RequireAuth><Lobby /></RequireAuth> }
+        />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
