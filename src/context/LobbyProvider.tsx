@@ -10,13 +10,16 @@ export function LobbyProvider({ children }: { children: ReactNode }) {
   const [currentLobby, setCurrentLobby] = useState<Lobby | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const refreshCurrentLobby = useCallback(async () => {
-    const lobby = await getCurrentLobby();
-    setCurrentLobby(lobby);
-  }, []);
+const refreshCurrentLobby = useCallback(async () => {
+  const lobby = await getCurrentLobby();
+  setCurrentLobby(lobby);
+  return lobby; 
+}, []);
 
   useEffect(() => {
+    console.log("LobbyProvider effect running, token:", token);
     if (!token) {
+      console.log("No token — bailing out before connecting.");
       startTransition(() => {
         setCurrentLobby(null);
         setIsLoading(false);
@@ -59,14 +62,19 @@ export function LobbyProvider({ children }: { children: ReactNode }) {
     (async () => {
       setIsLoading(true);
       try {
-        if (conn.state === "Disconnected") {
-          await conn.start();
+          console.log("conn.state before start:", conn.state);
+          if (conn.state === "Disconnected") {
+            console.log("Calling conn.start()...");
+            await conn.start();
+            console.log("conn.start() succeeded, state:", conn.state);
+          }
+          const lobby = await getCurrentLobby();
+          if (!isStale) setCurrentLobby(lobby);
+        } catch (err) {
+          console.error("SignalR connection failed:", err);
+        } finally {
+          if (!isStale) setIsLoading(false);
         }
-        const lobby = await getCurrentLobby();
-        if (!isStale) setCurrentLobby(lobby);
-      } finally {
-        if (!isStale) setIsLoading(false);
-      }
     })();
 
     return () => {

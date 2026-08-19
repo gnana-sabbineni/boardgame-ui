@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { useAuth } from "../context/auth-context";
+import { useLobby } from "../context/lobby-context";
 import { Avatar } from "./Avatar";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { useNotifications } from "../hooks/useNotifications";
@@ -13,6 +14,8 @@ interface AppHeaderProps {
 
 export function AppHeader({ onAccepted }: AppHeaderProps) {
   const { user } = useAuth();
+  const { currentLobby, refreshCurrentLobby } = useLobby();
+  const navigate = useNavigate();
   const { notifications, unreadCount, isLoading, error, respond } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,12 +33,21 @@ export function AppHeader({ onAccepted }: AppHeaderProps) {
 
   async function handleRespond(id: string, action: NotificationAction) {
     await respond(id, action);
-    // NotificationResponse doesn't currently indicate whether this was a
-    // friend request or a lobby invite (no Type field on the wire), so an
-    // accept triggers a generic "something changed" refresh rather than a
-    // targeted one. See note to the backend team about adding that field.
-    if (action === "accept") {
-      onAccepted?.();
+
+    if (action !== "accept") return;
+
+    // We don't yet know the notification's type (friend vs. lobby invite —
+    // no Type field on NotificationResponse). Instead of guessing, we just
+    // check the *outcome*: if we weren't in a lobby before and we are one
+    // now, this accept must have been a lobby invite — redirect.
+    const wasInLobby = !!currentLobby;
+    const updatedLobby = await refreshCurrentLobby();
+
+    onAccepted?.();
+
+    if (!wasInLobby && updatedLobby) {
+      setIsOpen(false);
+      navigate("/lobby");
     }
   }
 

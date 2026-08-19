@@ -4,7 +4,7 @@ import type { Lobby } from "../types/lobby";
 export interface LobbyContextValue {
   currentLobby: Lobby | null;
   isLoading: boolean;
-  refreshCurrentLobby: () => Promise<void>;
+  refreshCurrentLobby: () => Promise<Lobby | null>; // now returns the fetched lobby
   setCurrentLobby: (lobby: Lobby | null) => void;
 }
 
