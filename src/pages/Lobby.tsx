@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { UserPlus, UserMinus, Crown } from "lucide-react";
 import { AppHeader } from "../components/AppHeader";
 import { Button } from "../components/Button";
 import { Avatar } from "../components/Avatar";
 import { InviteToLobbyModal } from "../components/InviteToLobbyModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { leaveLobby, kickMember, startGame } from "../api/lobbies";
+import { leaveLobby, kickMember, startGame, closeLobby } from "../api/lobbies";
 import { ApiError } from "../api/client";
 import { useLobby } from "../context/lobby-context";
 import { useAuth } from "../context/auth-context";
@@ -13,9 +14,12 @@ import { useAuth } from "../context/auth-context";
 export function Lobby() {
   const { currentLobby, setCurrentLobby } = useLobby();
   const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [memberToKick, setMemberToKick] = useState<{ userId: string; name: string } | null>(null);
   const [isLeaveConfirmOpen, setIsLeaveConfirmOpen] = useState(false);
+  const [isCloseConfirmOpen, setIsCloseConfirmOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,8 +44,24 @@ export function Lobby() {
       await leaveLobby();
       setCurrentLobby(null);
       setIsLeaveConfirmOpen(false);
+      navigate("/");
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : "Couldn't leave the lobby.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleClose() {
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await closeLobby();
+      setCurrentLobby(null);
+      setIsCloseConfirmOpen(false);
+      navigate("/");
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : "Couldn't close the lobby.");
     } finally {
       setIsSubmitting(false);
     }
@@ -92,7 +112,7 @@ export function Lobby() {
       <div className="flex items-center gap-2 border-b border-accent/20 bg-accent/5 px-8 py-3 text-sm">
         <span className="h-2 w-2 rounded-full bg-accent" />
         <span className="font-medium text-text">You're in a lobby</span>
-        <span className="text-text/40">· Monopoly</span>
+        <span className="text-text/40">&middot; Monopoly</span>
       </div>
 
       <main className="p-8">
@@ -154,13 +174,25 @@ export function Lobby() {
         {actionError && <p className="mb-4 text-sm text-danger">{actionError}</p>}
 
         <div className="flex items-center justify-between border-t border-white/10 pt-6">
-          <Button
-            variant="secondary"
-            className="w-auto border-danger px-4 text-danger hover:bg-danger hover:text-text"
-            onClick={() => setIsLeaveConfirmOpen(true)}
-          >
-            Leave lobby
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="secondary"
+              className="w-auto border-danger px-4 text-danger hover:bg-danger hover:text-text"
+              onClick={() => setIsLeaveConfirmOpen(true)}
+            >
+              Leave lobby
+            </Button>
+
+            {isHost && (
+              <Button
+                variant="secondary"
+                className="w-auto border-danger px-4 text-danger hover:bg-danger hover:text-text"
+                onClick={() => setIsCloseConfirmOpen(true)}
+              >
+                Close lobby
+              </Button>
+            )}
+          </div>
 
           <div className="flex items-center gap-3">
             {isHost && (
@@ -207,11 +239,26 @@ export function Lobby() {
       {isLeaveConfirmOpen && (
         <ConfirmDialog
           title="Leave lobby"
-          message="Are you sure you want to leave this lobby?"
+          message={
+            isHost
+              ? "Are you sure you want to leave? Host will transfer to the next player."
+              : "Are you sure you want to leave this lobby?"
+          }
           confirmLabel="Leave"
           isSubmitting={isSubmitting}
           onConfirm={handleLeave}
           onCancel={() => setIsLeaveConfirmOpen(false)}
+        />
+      )}
+
+      {isCloseConfirmOpen && (
+        <ConfirmDialog
+          title="Close lobby"
+          message="This will remove everyone from the lobby and end it. This can't be undone. Are you sure?"
+          confirmLabel="Close lobby"
+          isSubmitting={isSubmitting}
+          onConfirm={handleClose}
+          onCancel={() => setIsCloseConfirmOpen(false)}
         />
       )}
     </div>

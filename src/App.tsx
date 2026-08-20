@@ -14,7 +14,12 @@ import { ReturnToLobbyBanner } from "./components/ReturnToLobbyBanner";
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { token } = useAuth();
-  return token ? <>{children}</> : <Navigate to="/login" replace />;
+  return token ? <>{children}</> : <Navigate to="/" replace />;
+}
+
+function RedirectIfAuthed({ children }: { children: ReactNode }) {
+  const { token } = useAuth();
+  return token ? <Navigate to="/home" replace /> : <>{children}</>;
 }
 
 export default function App() {
@@ -23,9 +28,30 @@ export default function App() {
       <LobbyProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Onboarding />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route
+              path="/"
+              element={
+                <RedirectIfAuthed>
+                  <Onboarding />
+                </RedirectIfAuthed>
+              }
+            />
+            <Route
+              path="/login"
+              element={
+                <RedirectIfAuthed>
+                  <Login />
+                </RedirectIfAuthed>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <RedirectIfAuthed>
+                  <Register />
+                </RedirectIfAuthed>
+              }
+            />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/home"

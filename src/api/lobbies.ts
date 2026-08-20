@@ -42,3 +42,7 @@ export function kickMember(targetUserId: string) {
 export function startGame() {
   return apiFetch<null>("/lobbies/start", { method: "POST" });
 }
+
+export function closeLobby() {
+  return apiFetch<null>("/lobbies/close", { method: "POST" });
+}
