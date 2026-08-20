@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { useAuth } from "../context/auth-context";
+import { useLobby } from "../context/lobby-context";
 import { Avatar } from "./Avatar";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { useNotifications } from "../hooks/useNotifications";
 import type { NotificationAction } from "../types/notification";
 
 interface AppHeaderProps {
-  onFriendRequestAccepted?: () => void;
+  onAccepted?: () => void;
 }
 
-export function AppHeader({ onFriendRequestAccepted }: AppHeaderProps) {
+export function AppHeader({ onAccepted }: AppHeaderProps) {
   const { user } = useAuth();
+  const { currentLobby, refreshCurrentLobby } = useLobby();
+  const navigate = useNavigate();
   const { notifications, unreadCount, isLoading, error, respond } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -30,10 +33,21 @@ export function AppHeader({ onFriendRequestAccepted }: AppHeaderProps) {
 
   async function handleRespond(id: string, action: NotificationAction) {
     await respond(id, action);
-    // Only "accept" can change the friends list — lobby invites aren't
-    // implemented yet, so any successful accept today is a friend request.
-    if (action === "accept") {
-      onFriendRequestAccepted?.();
+
+    if (action !== "accept") return;
+
+    // We don't yet know the notification's type (friend vs. lobby invite —
+    // no Type field on NotificationResponse). Instead of guessing, we just
+    // check the *outcome*: if we weren't in a lobby before and we are one
+    // now, this accept must have been a lobby invite — redirect.
+    const wasInLobby = !!currentLobby;
+    const updatedLobby = await refreshCurrentLobby();
+
+    onAccepted?.();
+
+    if (!wasInLobby && updatedLobby) {
+      setIsOpen(false);
+      navigate("/lobby");
     }
   }
 
