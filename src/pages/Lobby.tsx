@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { UserPlus, UserMinus, Crown } from "lucide-react";
 import { AppHeader } from "../components/AppHeader";
 import { Button } from "../components/Button";
@@ -31,6 +31,9 @@ export function Lobby() {
       </div>
     );
   }
+
+  // GameStarting syncs the lobby to InProgress: everyone moves to the board.
+  if (currentLobby.status === "InProgress") return <Navigate to="/game" replace />;
 
   const isHost = currentLobby.hostUserId === user.id;
   const allOnline = currentLobby.members.every((m) => m.isOnline);
@@ -97,7 +100,7 @@ export function Lobby() {
     try {
       await startGame();
       // GameStarting arrives over SignalR and syncs lobby.status to InProgress;
-      // navigation to the actual game screen is Phase 3.
+      // the redirect to /game happens above, for every member at once.
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : "Couldn't start the game.");
     } finally {

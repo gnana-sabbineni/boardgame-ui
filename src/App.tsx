@@ -10,6 +10,7 @@ import { Home } from "./pages/Home";
 import { Settings } from "./pages/Settings";
 import { ResetPassword } from "./pages/ResetPassword";
 import { Lobby } from "./pages/Lobby";
+import { Game } from "./pages/Game";
 import { ReturnToLobbyBanner } from "./components/ReturnToLobbyBanner";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -74,6 +75,14 @@ export default function App() {
               element={
                 <RequireAuth>
                   <Lobby />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/game"
+              element={
+                <RequireAuth>
+                  <Game />
                 </RequireAuth>
               }
             />
