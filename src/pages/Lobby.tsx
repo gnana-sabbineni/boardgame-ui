@@ -1,18 +1,18 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { UserPlus, UserMinus, Crown } from "lucide-react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { UserPlus, UserMinus, Crown, Bot } from "lucide-react";
 import { AppHeader } from "../components/AppHeader";
 import { Button } from "../components/Button";
 import { Avatar } from "../components/Avatar";
 import { InviteToLobbyModal } from "../components/InviteToLobbyModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { leaveLobby, kickMember, startGame, closeLobby } from "../api/lobbies";
+import { leaveLobby, kickMember, startGame, closeLobby, addBot } from "../api/lobbies";
 import { ApiError } from "../api/client";
 import { useLobby } from "../context/lobby-context";
 import { useAuth } from "../context/auth-context";
 
 export function Lobby() {
-  const { currentLobby, setCurrentLobby } = useLobby();
+  const { currentLobby, setCurrentLobby, refreshCurrentLobby } = useLobby();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -31,6 +31,9 @@ export function Lobby() {
       </div>
     );
   }
+
+  // GameStarting syncs the lobby to InProgress: everyone moves to the board.
+  if (currentLobby.status === "InProgress") return <Navigate to="/game" replace />;
 
   const isHost = currentLobby.hostUserId === user.id;
   const allOnline = currentLobby.members.every((m) => m.isOnline);
@@ -91,13 +94,26 @@ export function Lobby() {
     }
   }
 
+  async function handleAddBot() {
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await addBot();
+      await refreshCurrentLobby(); // don't rely only on a SignalR event for the new seat
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : "Couldn't add a computer player.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   async function handleStart() {
     setIsSubmitting(true);
     setActionError(null);
     try {
       await startGame();
       // GameStarting arrives over SignalR and syncs lobby.status to InProgress;
-      // navigation to the actual game screen is Phase 3.
+      // the redirect to /game happens above, for every member at once.
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : "Couldn't start the game.");
     } finally {
@@ -195,6 +211,17 @@ export function Lobby() {
           </div>
 
           <div className="flex items-center gap-3">
+            {isHost && emptySlots > 0 && (
+              <Button
+                variant="secondary"
+                className="flex w-auto items-center gap-2 px-4"
+                disabled={isSubmitting}
+                onClick={handleAddBot}
+              >
+                <Bot size={16} /> Add bot
+              </Button>
+            )}
+
             {isHost && (
               <Button
                 variant="secondary"

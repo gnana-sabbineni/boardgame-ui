@@ -24,3 +24,9 @@
   /* Danger */
   --color-danger: #e5626a;
 }
+
+/* Turn-activity popup progress bar: drains over the 4s the popup is shown. */
+@keyframes popup-drain {
+  from { width: 100%; }
+  to { width: 0%; }
+}
