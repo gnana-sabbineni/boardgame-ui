@@ -77,7 +77,8 @@ export function Board({ board, players, properties, myUserId, highlightTile, chi
         const Icon = tileIcon(tile);
         const corner = isCorner(tile.index);
         const buyable = tile.price > 0;
-        const subline = tile.type === "Tax" ? `Pay ${money(tile.taxAmount)}` : buyable && !owner ? money(tile.price) : null;
+        const subline =
+          here.length > 0 ? null : tile.type === "Tax" ? `Pay ${money(tile.taxAmount)}` : buyable && !owner ? money(tile.price) : null;
         const houses = prop?.houses ?? 0;
 
         return (
@@ -135,24 +136,30 @@ export function Board({ board, players, properties, myUserId, highlightTile, chi
                   {Icon && <Icon size={16} style={{ color: color ?? "rgba(233,233,237,0.6)" }} />}
                   <div className="text-[10px] font-medium leading-tight text-text [text-wrap:balance]">{tile.name}</div>
                 </div>
-                {owner && (
-                  <div
-                    className="flex h-[18px] w-[18px] items-center justify-center rounded-full"
-                    style={{ background: owner.userId === myUserId ? ME_BG : OTHER_BG }}
-                    title={`Owned by ${owner.firstName}`}
-                  >
-                    {(() => {
-                      const OwnerIcon = pieceFor(owner.seat).icon;
-                      return <OwnerIcon size={10} className="text-text" />;
-                    })()}
-                  </div>
-                )}
                 {subline && <div className="text-[10px] text-text/50">{subline}</div>}
               </div>
             )}
 
+
+            {owner && !corner && (
+              <div
+                className="absolute flex h-[15px] w-[15px] items-center justify-center rounded-full"
+                style={{
+                  background: owner.userId === myUserId ? ME_BG : OTHER_BG,
+                  top: side === "b" ? 10 : 3, // keep clear of the 7px colour strip
+                  left: side === "r" ? 10 : 3,
+                }}
+                title={`Owned by ${owner.firstName}`}
+              >
+                {(() => {
+                  const OwnerIcon = pieceFor(owner.seat).icon;
+                  return <OwnerIcon size={9} className="text-text" />;
+                })()}
+              </div>
+            )}
+
             {here.length > 0 && (
-              <div className="absolute left-[3px] top-[3px] flex">
+              <div className="absolute bottom-[3px] left-1/2 flex -translate-x-1/2">
                 {here.map((p, k) => {
                   const PieceIcon = pieceFor(p.seat).icon;
                   const mine = p.userId === myUserId;

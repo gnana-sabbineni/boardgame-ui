@@ -26,11 +26,14 @@ export function ActivityPopup({ g }: { g: GameApi }) {
   const gain = popup.kind === "start";
 
   return (
-    <div className="absolute inset-0 z-10 flex items-center justify-center bg-bg/70" onClick={dismissPopup}>
+    // Sits at the top of the board centre with no backdrop, so the timer, dice and
+    // action buttons below stay visible and clickable while it shows.
+    <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center">
       <div
         key={popup.key}
         role="status"
-        className="flex w-80 flex-col gap-4 rounded-2xl border border-white/10 bg-surface p-5 shadow-xl"
+        onClick={dismissPopup}
+        className="pointer-events-auto flex w-80 cursor-pointer flex-col gap-3 rounded-2xl border border-accent/30 bg-surface p-4 shadow-xl"
       >
         <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-white/50">
           <Icon size={14} className="text-accent" />
