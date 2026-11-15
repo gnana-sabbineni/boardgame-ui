@@ -43,6 +43,11 @@ export function startGame() {
   return apiFetch<null>("/lobbies/start", { method: "POST" });
 }
 
+// Host adds a computer player to an open lobby (needs a free slot).
+export function addBot() {
+  return apiFetch<null>("/lobbies/bots", { method: "POST" });
+}
+
 export function closeLobby() {
   return apiFetch<null>("/lobbies/close", { method: "POST" });
 }

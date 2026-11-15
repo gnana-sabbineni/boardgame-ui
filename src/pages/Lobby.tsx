@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { UserPlus, UserMinus, Crown } from "lucide-react";
+import { UserPlus, UserMinus, Crown, Bot } from "lucide-react";
 import { AppHeader } from "../components/AppHeader";
 import { Button } from "../components/Button";
 import { Avatar } from "../components/Avatar";
 import { InviteToLobbyModal } from "../components/InviteToLobbyModal";
 import { ConfirmDialog } from "../components/ConfirmDialog";
-import { leaveLobby, kickMember, startGame, closeLobby } from "../api/lobbies";
+import { leaveLobby, kickMember, startGame, closeLobby, addBot } from "../api/lobbies";
 import { ApiError } from "../api/client";
 import { useLobby } from "../context/lobby-context";
 import { useAuth } from "../context/auth-context";
 
 export function Lobby() {
-  const { currentLobby, setCurrentLobby } = useLobby();
+  const { currentLobby, setCurrentLobby, refreshCurrentLobby } = useLobby();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -89,6 +89,19 @@ export function Lobby() {
       setMemberToKick(null);
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : "Couldn't remove that player.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleAddBot() {
+    setIsSubmitting(true);
+    setActionError(null);
+    try {
+      await addBot();
+      await refreshCurrentLobby(); // don't rely only on a SignalR event for the new seat
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : "Couldn't add a computer player.");
     } finally {
       setIsSubmitting(false);
     }
@@ -198,6 +211,17 @@ export function Lobby() {
           </div>
 
           <div className="flex items-center gap-3">
+            {isHost && emptySlots > 0 && (
+              <Button
+                variant="secondary"
+                className="flex w-auto items-center gap-2 px-4"
+                disabled={isSubmitting}
+                onClick={handleAddBot}
+              >
+                <Bot size={16} /> Add bot
+              </Button>
+            )}
+
             {isHost && (
               <Button
                 variant="secondary"
